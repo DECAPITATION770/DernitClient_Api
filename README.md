@@ -55,7 +55,6 @@ docker compose up -d --build
 
 <details>
 <summary><strong>Latest BTC price</strong></summary>
-
 **GET** `/api/v1/prices/latest`
 
 **Description:** Get latest price for ticker
@@ -80,10 +79,8 @@ curl -s "http://localhost:8000/api/v1/prices/latest?ticker=BTC_USD"
   "timestamp": 1768759313
 }
 ```
-
-</details>
-
 ---
+</details>
 
 <details>
 <summary><strong>Last 200 ETH records</strong></summary>
@@ -121,10 +118,9 @@ curl -s "http://localhost:8000/api/v1/prices?ticker=ETH_USD&limit=200"
   }
 ]
 ```
-
+---
 </details>
 
----
 
 <details>
 <summary><strong>Range query (unix timestamps)</strong></summary>
@@ -163,11 +159,9 @@ curl -s "http://localhost:8000/api/v1/prices/by-date?ticker=BTC_USD&date_from=17
   }
 ]
 ```
-
 </details>
 
-
-
+---
 ## Architecture
 
 ```mermaid
