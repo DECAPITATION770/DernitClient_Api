@@ -17,7 +17,3 @@ def on_startup():
 @app.get("/")
 def root():
     return {"message": "Crypto Price Tracker API is running"}
-
-@app.get("/ping")
-def health_check():
-    return {"status": "ok"}
