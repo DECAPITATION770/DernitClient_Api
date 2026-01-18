@@ -1,284 +1,161 @@
-# Deribit API Client
-![Python](https://img.shields.io/badge/python-3.11-3776AB?style=flat&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)
-![Celery](https://img.shields.io/badge/Celery-37823B?style=flat&logo=celery&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=flat&logo=postgresql&logoColor=white)
-![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)
-![License](https://img.shields.io/github/license/DECAPITATION770/DernitClient_Api?style=flat)
+<div align="center">
 
-Асинхронный сервис, который **раз в минуту** забирает *index price* BTC/USD и ETH/USD с биржи Deribit и сохраняет данные в PostgreSQL.
+# Deribit Price Tracker
 
-Проект разделён на:
+**Асинхронный трекер index price BTC/USD и ETH/USD**  
+сбор каждые 60 секунд → PostgreSQL → удобный FastAPI API
 
-* HTTP API для чтения данных
-* фоновый сборщик цен
+[![Python 3.11](https://img.shields.io/badge/python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Celery](https://img.shields.io/badge/Celery-37823B?style=for-the-badge&logo=celery&logoColor=white)](https://docs.celeryq.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-Всё запускается одной командой через Docker.
+</div>
 
----
+<p align="center">
+  <img src="docs/images/banner-dark.png" alt="Deribit Price Tracker Banner" width="800"/>
+  <br/><br/>
+  <em>Реал-тайм цены крипты без лишних зависимостей — одна команда и готово</em>
+</p>
 
-## TL;DR
+## Почему стоит попробовать
 
-* Celery раз в минуту получает цены с Deribit
-* FastAPI отдаёт сохранённые данные
-* PostgreSQL хранит time-series
-* Сбор данных и API полностью изолированы
-* Docker-first, без ручной возни
+- ⚡ Полностью асинхронный стек (FastAPI + aiohttp + Celery)
+- 🕒 Автособор index price **каждые 60 секунд**
+- 📊 Надёжное хранение time-series в PostgreSQL
+- 🔍 Красивая интерактивная документация (Swagger + ReDoc)
+- 🐳 Всё запускается одной командой через Docker Compose
+- 🔄 Автоматические ретраи при сбоях биржи
+- 🧪 Тесты + чёткая слоистая архитектура
 
----
-
-## Quick Start
+## Быстрый старт (рекомендуется)
 
 ```bash
+# 1. Клонируем репозиторий
 git clone https://github.com/DECAPITATION770/DernitClient_Api.git
 cd DernitClient_Api
+
+# 2. Копируем переменные окружения
 cp .env.example .env
-docker-compose up -d --build
+
+# 3. Запускаем (первый раз ~1–2 минуты наビルд)
+docker compose up -d --build
+
+# 4. Ждём 30–60 секунд пока соберутся первые данные
+# Затем открываем в браузере:
+# → http://localhost:8000/docs          (Swagger UI)
+# → http://localhost:8000/redoc         (альтернативная документация)
 ```
 
-Открыть Swagger:
-[http://localhost:8000/docs](http://localhost:8000/docs)
-
-<details>
-<summary><strong>Запуск без Docker (Manual Run)</strong></summary>
-
-Для локального запуска без использования Docker.
-
-### Backend API
+Проверить, что всё живо:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-uvicorn app.main:app --reload
+curl http://localhost:8000/api/v1/prices/latest?ticker=BTC_USD | jq
 ```
 
-Доступ к API:
-[http://localhost:8000/docs](http://localhost:8000/docs)
-
-### Celery Worker
-
-```bash
-celery -A app.celery_app worker -l info
-```
-
-### Celery Beat
-
-```bash
-celery -A app.celery_app beat -l info
-```
-
-</details>
-
----
-
-## What’s Running
-
-* FastAPI → [http://localhost:8000](http://localhost:8000)
-* PostgreSQL → internal
-* Redis → internal
-* Celery worker → background
-* Celery beat → background
-
-Если Swagger открывается — система жива.
-
----
-
-## Tech Stack
-
-* **Python 3.11** — async runtime
-* **FastAPI** — HTTP API
-* **Celery + Redis** — фоновый сбор цен
-* **PostgreSQL** — хранение данных
-* **aiohttp** — Deribit API client
-* **Docker / Docker Compose** — изоляция и запуск
-* **pytest** — тестирование
-
----
-
-## Architecture
-
-### Logical Flow
-
-```text
-Deribit API
-     ↓
-DeribitClient (aiohttp)
-     ↓
-PriceService
-     ↓
-PriceRepository
-     ↓
-PostgreSQL
-```
-
-### Runtime Overview
-
-```text
-┌─────────────┐     ┌──────────────┐
-│ FastAPI     │     │ Celery Beat  │
-│ (HTTP API)  │     └──────┬───────┘
-└──────┬──────┘            ↓
-       ↓             ┌──────────────┐
-┌─────────────┐      │ Celery Worker│
-│ PostgreSQL  │      └──────┬───────┘
-└─────────────┘             ↓
-                       Deribit API
-```
-
----
-
-## Example Flow (Happy Path)
-
-1. Celery Beat запускает задачу раз в минуту
-2. DeribitClient получает index price
-3. Цена сохраняется в PostgreSQL
-4. API отдаёт данные через HTTP
-
----
-
-## API Overview
-
-| Endpoint                     | Description    |
-| ---------------------------- | -------------- |
-| GET `/api/v1/prices`         | История цен    |
-| GET `/api/v1/prices/latest`  | Последняя цена |
-| GET `/api/v1/prices/by-date` | Цены за период |
-
----
-
-### Получить последнюю цену
-
-```http
-GET /api/v1/prices/latest?ticker=BTC_USD
-```
+Ожидаемый ответ:
 
 ```json
 {
-  "id": 29,
+  "id": 42,
   "ticker": "BTC_USD",
   "price": 95131.86,
   "timestamp": 1768752407
 }
 ```
 
-**Errors**
+## Как это выглядит
 
-* `404` — данных по тикеру нет
+<p align="center">
+  <img src="docs/images/swagger-dark.png" alt="Swagger UI — цены в реальном времени" width="800"/>
+  <br/><br/>
+  <em>Интерактивная документация FastAPI с примерами запросов</em>
+</p>
 
----
+<p align="center">
+  <img src="docs/images/price-chart-example.png" alt="График цен BTC/USD и ETH/USD" width="800"/>
+  <br/><br/>
+  <em>Пример time-series данных (можно легко подключить Grafana)</em>
+</p>
 
-### История цен
+<p align="center">
+  <img src="docs/images/architecture-diagram.png" alt="Архитектура сервиса" width="800"/>
+  <br/><br/>
+  <em>Как всё связано: Deribit → Celery → PostgreSQL → FastAPI</em>
+</p>
 
-```http
-GET /api/v1/prices?ticker=ETH_USD&limit=100
-```
+## API — основные эндпоинты
 
-```json
-[
-  {
-    "id": 28,
-    "ticker": "ETH_USD",
-    "price": 3334.38,
-    "timestamp": 1768752345
-  }
-]
-```
+| Метод | Эндпоинт                              | Описание                     | Пример запроса                              |
+|-------|---------------------------------------|------------------------------|---------------------------------------------|
+| GET   | `/api/v1/prices/latest`               | Последняя цена               | `?ticker=BTC_USD`                           |
+| GET   | `/api/v1/prices`                      | История (последние N записей)| `?ticker=ETH_USD&limit=100`                 |
+| GET   | `/api/v1/prices/by-date`              | Цены за временной диапазон   | `?ticker=BTC_USD&date_from=1768750000&date_to=1768753000` |
 
----
+### Примеры с curl
 
-### Цены за период
-
-```http
-GET /api/v1/prices/by-date?ticker=BTC_USD&date_from=1768751800&date_to=1768752400
-```
-
-```json
-[
-  {
-    "id": 12,
-    "ticker": "BTC_USD",
-    "price": 95012.12,
-    "timestamp": 1768751844
-  }
-]
-```
-
-**Errors**
-
-* `400` — `date_from > date_to`
-
----
-
-## Error Handling
-
-| Code | Reason                    |
-| ---- | ------------------------- |
-| 400  | Некорректные параметры    |
-| 404  | Данные не найдены         |
-| 500  | Внутренняя ошибка сервиса |
-
----
-
-## Design Decisions
-
-### FastAPI
-
-* Асинхронная обработка запросов
-* Валидация входных данных
-* OpenAPI документация из коробки
-
-### Celery
-
-* Гарантированное выполнение задач
-* Retry при сбоях Deribit API
-* Фоновые задачи не блокируют HTTP API
-
-### Service / Repository
-
-* Бизнес-логика не зависит от БД
-* Упрощённое тестирование
-* Минимальная связность слоёв
-
-### UNIX Timestamp
-
-* Нет проблем с таймзонами
-* Удобная фильтрация
-* Стандарт для time-series данных
-
----
-
-## Testing
-
-### Через Docker (рекомендуется)
+**Последняя цена**
 
 ```bash
-docker-compose exec app pytest -v
+curl "http://localhost:8000/api/v1/prices/latest?ticker=BTC_USD" \| jq
 ```
 
-### Локально
+**Последние 50 значений ETH**
+
+```bash
+curl "http://localhost:8000/api/v1/prices?ticker=ETH_USD&limit=50" \| jq
+```
+
+**Диапазон дат**
+
+```bash
+curl "http://localhost:8000/api/v1/prices/by-date?ticker=BTC_USD&date_from=1768740000&date_to=1768760000" \| jq
+```
+
+## Технический стек
+
+- **Python** 3.11 (async/await везде)
+- **FastAPI** + **Pydantic** — API и валидация
+- **Celery** + **Redis** — планировщик и брокер
+- **PostgreSQL** — основное хранилище time-series
+- **aiohttp** — клиент к Deribit API
+- **SQLAlchemy 2.0** + **asyncpg** — асинхронный ORM
+- **Docker Compose** — всё в контейнерах
+- **pytest** + **pytest-asyncio** — тесты
+
+## Архитектура (логический поток)
+
+```text
+Deribit WebSocket/REST API
+          ↓ (aiohttp)
+     DeribitClient
+          ↓
+    PriceService
+          ↓
+ PriceRepository (SQLAlchemy async)
+          ↓
+     PostgreSQL
+          ↑
+      FastAPI → HTTP ответы
+```
+
+Фоновая часть полностью изолирована от HTTP-слоя — даже если Deribit ляжет, API продолжает отдавать кэшированные данные.
+
+## Тестирование
+
+Через Docker (самый удобный способ):
+
+```bash
+docker compose exec app pytest -v
+```
+
+Локально:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements.txt -r requirements-dev.txt
 pytest -v
 ```
-
----
-
-## Failure Handling
-
-* Deribit API недоступен → Celery retry
-* Ошибки сети → повторная попытка
-* Некорректные параметры API → 400
-* Отсутствие данных → 404
-
----
-
-## Assumptions & Limitations
-
-* Хранится только index price
-* Поддерживаются только BTC/USD и ETH/USD
-* Частота сбора фиксированная (1 минута)
