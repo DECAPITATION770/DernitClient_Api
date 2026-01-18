@@ -24,11 +24,16 @@ class PriceRepository:
         self.db.refresh(entity)
         return entity
 
-    def get_all_by_ticker(self, ticker: str) -> List[CryptoPrice]:
+    def get_all_by_ticker(
+            self,
+            ticker: str,
+            limit: int = 100,
+    ) -> List[CryptoPrice]:
         return (
             self.db.query(CryptoPrice)
             .filter(CryptoPrice.ticker == ticker)
             .order_by(CryptoPrice.timestamp.desc())
+            .limit(limit)
             .all()
         )
 

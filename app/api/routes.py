@@ -12,9 +12,10 @@ router = APIRouter(prefix="/api/v1/prices", tags=["prices"])
 @router.get("", response_model=List[PriceResponse])
 def get_all_prices(
     ticker: Ticker = Query(...),
+    limit: int = Query(100, ge=1, le=1000),
     service: PriceService = Depends(get_price_service),
 ):
-    return service.get_all_by_ticker(ticker)
+    return service.get_all_by_ticker(ticker, limit)
 
 
 @router.get("/latest", response_model=PriceResponse)
@@ -40,11 +41,15 @@ def get_prices_by_date(
     date_to: int = Query(..., ge=0),
     service: PriceService = Depends(get_price_service),
 ):
-    try:
-        return service.get_prices_by_date(
-            ticker=ticker,
-            date_from=date_from,
-            date_to=date_to,
+    if date_from > date_to:
+        raise HTTPException(
+            status_code=400,
+            detail="date_from must be less than or equal to date_to",
         )
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+
+    return service.get_prices_by_date(
+        ticker=ticker,
+        date_from=date_from,
+        date_to=date_to,
+    )
+

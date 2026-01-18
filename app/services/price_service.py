@@ -21,8 +21,8 @@ class PriceService:
             timestamp=timestamp,
         )
 
-    def get_all_by_ticker(self, ticker: Ticker) -> List[CryptoPrice]:
-        return self.repository.get_all_by_ticker(ticker.value)
+    def get_all_by_ticker(self, ticker: Ticker, limit: int = 100) -> List[CryptoPrice]:
+        return self.repository.get_all_by_ticker(ticker.value, limit)
 
     def get_latest_price(self, ticker: Ticker) -> Optional[CryptoPrice]:
         return self.repository.get_latest_by_ticker(ticker.value)
