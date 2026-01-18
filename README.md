@@ -79,7 +79,7 @@ curl -s "http://localhost:8000/api/v1/prices/latest?ticker=BTC_USD"
   "timestamp": 1768759313
 }
 ```
-
+___
 </details>
 
 <details>
@@ -118,7 +118,7 @@ curl -s "http://localhost:8000/api/v1/prices?ticker=ETH_USD&limit=200"
   }
 ]
 ```
-
+___
 </details>
 
 
