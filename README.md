@@ -38,8 +38,6 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-After ~60–120 seconds for initial data collection:
-
 - Swagger UI: http://localhost:8000/docs  
 - ReDoc: http://localhost:8000/redoc  
 
@@ -51,18 +49,124 @@ After ~60–120 seconds for initial data collection:
 | GET    | `/api/v1/prices`                | Last N records                     | `ticker`, `limit` (default: 100)          |
 | GET    | `/api/v1/prices/by-date`        | Records in timestamp range         | `ticker`, `date_from`, `date_to`          |
 
+---
+
 ## Examples
 
+<details>
+<summary><strong>Latest BTC price</strong></summary>
+
+**GET** `/api/v1/prices/latest`
+
+**Description:** Get latest price for ticker
+
+**Query params:**
+
+* `ticker` (required): `BTC_USD | ETH_USD`
+
+**Request**
+
 ```bash
-# Latest BTC price
-curl -s "http://localhost:8000/api/v1/prices/latest?ticker=BTC_USD" 
-
-# Last 200 ETH records
-curl -s "http://localhost:8000/api/v1/prices?ticker=ETH_USD&limit=200" 
-
-# Range query (unix timestamps)
-curl -s "http://localhost:8000/api/v1/prices/by-date?ticker=BTC_USD&date_from=1735689600&date_to=1735776000" 
+curl -s "http://localhost:8000/api/v1/prices/latest?ticker=BTC_USD"
 ```
+
+**Response 200**
+
+```json
+{
+  "id": 17,
+  "ticker": "BTC_USD",
+  "price": 95210.21,
+  "timestamp": 1768759313
+}
+```
+
+</details>
+
+---
+
+<details>
+<summary><strong>Last 200 ETH records</strong></summary>
+
+**GET** `/api/v1/prices`
+
+**Description:** Get last N price records
+
+**Query params:**
+
+* `ticker` (required): `ETH_USD`
+* `limit` (optional, default 100, max 1000)
+
+**Request**
+
+```bash
+curl -s "http://localhost:8000/api/v1/prices?ticker=ETH_USD&limit=200"
+```
+
+**Response 200**
+
+```json
+[
+  {
+    "id": 22,
+    "ticker": "ETH_USD",
+    "price": 3340.56,
+    "timestamp": 1768759437
+  },
+  {
+    "id": 20,
+    "ticker": "ETH_USD",
+    "price": 3338.91,
+    "timestamp": 1768759375
+  }
+]
+```
+
+</details>
+
+---
+
+<details>
+<summary><strong>Range query (unix timestamps)</strong></summary>
+
+**GET** `/api/v1/prices/by-date`
+
+**Description:** Get prices in timestamp range
+
+**Query params:**
+
+* `ticker` (required): `BTC_USD`
+* `date_from` (required): unix timestamp
+* `date_to` (required): unix timestamp
+
+**Request**
+
+```bash
+curl -s "http://localhost:8000/api/v1/prices/by-date?ticker=BTC_USD&date_from=1735689600&date_to=1735776000"
+```
+
+**Response 200**
+
+```json
+[
+  {
+    "id": 11,
+    "ticker": "BTC_USD",
+    "price": 95185.59,
+    "timestamp": 1768759127
+  },
+  {
+    "id": 9,
+    "ticker": "BTC_USD",
+    "price": 95182.69,
+    "timestamp": 1768759065
+  }
+]
+```
+
+</details>
+
+
 
 ## Architecture
 
