@@ -3,8 +3,13 @@ import time
 from celery import Celery
 from app.config import settings
 from app.database import SessionLocal
-from app.services.derbit_client import DeribitClient
+from app.services.deribit_client import DeribitClient
 from app.services.price_service import PriceService
+
+from app.domain.ticker import Ticker
+from app.repositories.price_repository import PriceRepository
+from app.services.price_service import PriceService
+
 
 celery_app = Celery(
     "crypto_tracker",
@@ -22,7 +27,6 @@ celery_app.conf.beat_schedule = {
 
 @celery_app.task
 def fetch_crypto_prices():
-    """Периодическая задача для получения цен"""
     asyncio.run(fetch_prices_async())
 
 
@@ -33,16 +37,16 @@ async def fetch_prices_async():
     async with DeribitClient() as client:
         db = SessionLocal()
         try:
-            service = PriceService(db)
+            repository = PriceRepository(db)
+            service = PriceService(repository)
 
-            for ticker in tickers:
-                price = await client.get_index_price(ticker)
+            for ticker in [Ticker.BTC_USD, Ticker.ETH_USD]:
+                price = await client.get_index_price(ticker.value.split("_")[0])
                 if price:
                     service.save_price(
-                        ticker=f"{ticker}_USD",
+                        ticker=ticker,
                         price=price,
-                        timestamp=timestamp
+                        timestamp=timestamp,
                     )
-                    print(f"Saved {ticker}_USD: {price} at {timestamp}")
         finally:
             db.close()

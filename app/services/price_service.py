@@ -1,48 +1,43 @@
-from sqlalchemy.orm import Session
 from typing import List, Optional
+
+from app.domain.ticker import Ticker
 from app.models import CryptoPrice
-from app.schemas import PriceFilter
+from app.repositories.price_repository import PriceRepository
 
 
 class PriceService:
-    def __init__(self, db: Session):
-        self.db = db
+    def __init__(self, repository: PriceRepository):
+        self.repository = repository
 
-    def save_price(self, ticker: str, price: float, timestamp: int) -> CryptoPrice:
-        db_price = CryptoPrice(
-            ticker=ticker,
+    def save_price(
+        self,
+        ticker: Ticker,
+        price: float,
+        timestamp: int,
+    ) -> CryptoPrice:
+        return self.repository.save(
+            ticker=ticker.value,
             price=price,
-            timestamp=timestamp
+            timestamp=timestamp,
         )
-        self.db.add(db_price)
-        self.db.commit()
-        self.db.refresh(db_price)
-        return db_price
 
-    def get_all_by_ticker(self, ticker: str) -> List[CryptoPrice]:
-        return self.db.query(CryptoPrice).filter(
-            CryptoPrice.ticker == ticker
-        ).order_by(CryptoPrice.timestamp.desc()).all()
+    def get_all_by_ticker(self, ticker: Ticker) -> List[CryptoPrice]:
+        return self.repository.get_all_by_ticker(ticker.value)
 
-    def get_latest_price(self, ticker: str) -> Optional[CryptoPrice]:
-        return self.db.query(CryptoPrice).filter(
-            CryptoPrice.ticker == ticker
-        ).order_by(CryptoPrice.timestamp.desc()).first()
+    def get_latest_price(self, ticker: Ticker) -> Optional[CryptoPrice]:
+        return self.repository.get_latest_by_ticker(ticker.value)
 
     def get_prices_by_date(
-            self,
-            ticker: str,
-            date_from: Optional[int] = None,
-            date_to: Optional[int] = None
+        self,
+        ticker: Ticker,
+        date_from: int,
+        date_to: int,
     ) -> List[CryptoPrice]:
-        query = self.db.query(CryptoPrice).filter(
-            CryptoPrice.ticker == ticker
+        if date_from > date_to:
+            raise ValueError("date_from must be <= date_to")
+
+        return self.repository.get_by_date_range(
+            ticker=ticker.value,
+            date_from=date_from,
+            date_to=date_to,
         )
-
-        if date_from:
-            query = query.filter(CryptoPrice.timestamp >= date_from)
-
-        if date_to:
-            query = query.filter(CryptoPrice.timestamp <= date_to)
-
-        return query.order_by(CryptoPrice.timestamp.desc()).all()

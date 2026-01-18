@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-
+import time
 
 class PriceResponse(BaseModel):
     id: int
@@ -14,5 +14,5 @@ class PriceResponse(BaseModel):
 
 class PriceFilter(BaseModel):
     ticker: str
-    date_from: Optional[int] = Field(None, description="Unix timestamp")
-    date_to: Optional[int] = Field(None, description="Unix timestamp")
+    date_from: Optional[int] = Field(time.time(), description="Unix timestamp")
+    date_to: Optional[int] = Field(time.time(), description="Unix timestamp")
