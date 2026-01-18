@@ -174,12 +174,7 @@ graph TD
     G[Celery + Redis] -->|Scheduler| C
 ```
 
-Сейчас секция **норм**, но она звучит как «я знаю слова, но не показываю, что думал». Рекрутеру хочется видеть **причину выбора + альтернативы + последствия**. Не эссе, а короткую инженерную логику.
-
-Ниже версия **прокачанная, но без воды**. Можно копировать целиком.
-
 ---
-
 ## Design Decisions
 
 ### FastAPI
@@ -193,9 +188,7 @@ Compared to Flask, FastAPI provides native async support and built-in request va
 This design allows the service to scale predictably under increasing request load without introducing additional worker processes.
 
 ### Celery + Redis
-
 Background price collection is separated from the API layer to keep request handling fast and resilient.
-
 * **Celery Beat** is used for deterministic periodic scheduling (every 60 seconds)
 * **Redis** is used as a lightweight and reliable message broker
 
