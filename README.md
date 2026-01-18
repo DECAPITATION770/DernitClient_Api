@@ -15,7 +15,7 @@
 </div>
 
 <p align="center">
-  <img src="docs/images/banner-dark.png" alt="Deribit Price Tracker Banner" width="800"/>
+  <img src="docs/images/deribit_logo_dark.svg" alt="Deribit Price Tracker Banner" width="800"/>
   <br/><br/>
   <em>Реал-тайм цены крипты без лишних зависимостей — одна команда и готово</em>
 </p>
