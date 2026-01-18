@@ -174,6 +174,49 @@ graph TD
     G[Celery + Redis] -->|Scheduler| C
 ```
 
+Сейчас секция **норм**, но она звучит как «я знаю слова, но не показываю, что думал». Рекрутеру хочется видеть **причину выбора + альтернативы + последствия**. Не эссе, а короткую инженерную логику.
+
+Ниже версия **прокачанная, но без воды**. Можно копировать целиком.
+
+---
+
+## Design Decisions
+
+### FastAPI
+
+Chosen as the API framework due to its async-first nature, high throughput, and automatic OpenAPI generation.
+Compared to Flask, FastAPI provides native async support and built-in request validation, which reduces boilerplate and simplifies future API extension.
+
+### Fully async stack
+
+`aiohttp`, `asyncpg`, and SQLAlchemy 2.0 async are used end-to-end to avoid blocking I/O during frequent price polling and database writes.
+This design allows the service to scale predictably under increasing request load without introducing additional worker processes.
+
+### Celery + Redis
+
+Background price collection is separated from the API layer to keep request handling fast and resilient.
+
+* **Celery Beat** is used for deterministic periodic scheduling (every 60 seconds)
+* **Redis** is used as a lightweight and reliable message broker
+
+This approach avoids running polling logic inside the API process and ensures price collection continues independently of API traffic.
+
+### PostgreSQL
+
+PostgreSQL was chosen for its reliability and strong support for time-based queries.
+The schema and indexes are optimized for querying by `(ticker, timestamp)`, which matches the most common access patterns (latest price, range queries, last N records).
+
+### Docker Compose
+
+Docker Compose provides a reproducible, one-command setup for the entire stack (API, worker, scheduler, database, Redis).
+This simplifies local development and ensures reviewers can run the project without manual environment configuration.
+
+### Fault tolerance
+
+Retry logic with exponential backoff is implemented for Deribit API calls to handle temporary network issues and rate limits.
+In case of upstream API outages, the system continues serving previously collected data from the database, ensuring read availability.
+
+---
 ## Development
 
 Install dependencies:
