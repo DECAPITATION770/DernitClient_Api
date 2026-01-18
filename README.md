@@ -55,6 +55,7 @@ docker compose up -d --build
 
 <details>
 <summary><strong>Latest BTC price</strong></summary>
+
 **GET** `/api/v1/prices/latest`
 
 **Description:** Get latest price for ticker
